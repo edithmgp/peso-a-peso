@@ -1,11 +1,12 @@
 """
 Dashboard Endpoints (/api/v1/dashboard)
+Connected to FinancialService for deterministic financial calculations.
 """
 
-from decimal import Decimal
 from fastapi import APIRouter
 from app.api.dependencies import CurrentUser
-from app.schemas.dashboard import DashboardResponse, BudgetSummary, ProjectionSummary
+from app.schemas.dashboard import DashboardResponse, DashboardChartsResponse
+from app.services.financial_service import FinancialService
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -13,20 +14,26 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 @router.get("", response_model=DashboardResponse)
 async def get_dashboard(user_id: CurrentUser):
     """
-    Returns dashboard consolidated data (deterministic calculations already done on server).
+    Returns consolidated dashboard metrics calculated deterministically on server:
+    - Available Today: remaining budget minus upcoming high-priority fixed expenses, divided by remaining days.
+    - Budget Summary: total, spent, remaining, percentage used.
+    - Projection: forecast at month end, projected savings, pacing status (on_track, warning, over_budget).
+    - Alerts: active warnings and advice.
     """
-    return DashboardResponse(
-        available_today=Decimal("18500.00"),
-        budget=BudgetSummary(
-            total=Decimal("600000.00"),
-            spent=Decimal("420000.00"),
-            remaining=Decimal("180000.00"),
-            percentage_used=Decimal("70.00"),
-        ),
-        projection=ProjectionSummary(
-            projected_total=Decimal("575000.00"),
-            projected_savings=Decimal("25000.00"),
-            status="on_track",
-        ),
-        alerts=[],
-    )
+    metrics = await FinancialService.calculate_monthly_metrics(user_id)
+    return metrics
+
+
+@router.get("/charts", response_model=DashboardChartsResponse)
+async def get_dashboard_charts(user_id: CurrentUser):
+    """
+    Returns aggregated chart series for Recharts visualizations:
+    - Categories: spending breakdown by category for the current month.
+    - Timeline: day-by-day accumulated spending vs ideal linear budget curve.
+    """
+    categories = await FinancialService.get_category_spending_breakdown(user_id)
+    timeline = await FinancialService.get_daily_spending_timeline(user_id)
+    return {
+        "categories": categories,
+        "timeline": timeline,
+    }

@@ -3,7 +3,7 @@ Dashboard Schemas based on Technical Contract v1.3
 """
 
 from decimal import Decimal
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 from app.schemas.alert import AlertResponse
 
@@ -26,3 +26,23 @@ class DashboardResponse(BaseModel):
     budget: BudgetSummary = Field(..., description="Current month budget progress")
     projection: ProjectionSummary = Field(..., description="Forecast to end of month")
     alerts: List[AlertResponse] = Field(default_factory=list, description="Active user alerts and recommendations")
+    meta: Optional[Dict[str, Any]] = Field(None, description="Metadata including remaining days and pending fixed expenses")
+
+
+class CategorySpendingItem(BaseModel):
+    slug: str
+    name: str
+    amount: float
+
+
+class TimelinePoint(BaseModel):
+    day: int
+    label: str
+    ideal: float
+    actual: Optional[float] = None
+    daily_spent: float = 0.0
+
+
+class DashboardChartsResponse(BaseModel):
+    categories: List[CategorySpendingItem]
+    timeline: List[TimelinePoint]
