@@ -1,15 +1,17 @@
 """
 Expenses Endpoints (/api/v1/expenses)
-Connected to ExpenseService with real Supabase persistence.
+Connected to ExpenseService with real Supabase persistence and OODA Agent Orchestration.
 """
 
 from datetime import date
 from typing import List, Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 from fastapi import APIRouter, HTTPException, Query, status
 from app.api.dependencies import CurrentUser
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
+from app.schemas.agents import AgentContext
 from app.services.expense_service import ExpenseService
+from app.orchestrator.orchestrator import orchestrator
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -17,9 +19,11 @@ router = APIRouter(prefix="/expenses", tags=["Expenses"])
 @router.post("", response_model=ExpenseResponse, status_code=status.HTTP_201_CREATED)
 async def create_expense(payload: ExpenseCreate, user_id: CurrentUser):
     """
-    Creates a new expense and persists it to Supabase.
-    Manual expenses are auto-confirmed. OCR expenses require a separate confirmation step.
-    Sprint 4 will trigger the full OODA orchestration cycle after creation.
+    Creates a new expense, persists it to Supabase and triggers the multi-agent OODA pipeline:
+    1. Observe: CaptureAgent validates and extracts info
+    2. Orient: AnalyzerAgent computes deviations and anomaly scores
+    3. Decide: PlannerAgent forecasts month-end budget trajectory
+    4. Act: EvaluatorAgent filters alerts and persists them if necessary
     """
     result = await ExpenseService.create_expense(user_id, payload)
     if result is None:
@@ -27,7 +31,18 @@ async def create_expense(payload: ExpenseCreate, user_id: CurrentUser):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create expense.",
         )
-    return result
+
+    expense_obj = ExpenseResponse.model_validate(result)
+
+    # Initialize AgentContext and trigger full multi-agent cycle
+    context = AgentContext(
+        request_id=uuid4(),
+        user_id=user_id,
+        expense=expense_obj,
+    )
+    await orchestrator.run_expense_cycle(context)
+
+    return expense_obj
 
 
 @router.get("", response_model=List[ExpenseResponse])
