@@ -1,0 +1,17 @@
+"""
+OODA Cycle States
+"""
+
+from enum import Enum
+
+
+class CycleState(str, Enum):
+    RECEIVED = "RECEIVED"
+    CAPTURED = "CAPTURED"
+    ANALYZED = "ANALYZED"
+    PLANNED = "PLANNED"
+    EVALUATED = "EVALUATED"
+    RESPONDED = "RESPONDED"
+    FEEDBACK_RECEIVED = "FEEDBACK_RECEIVED"
+    LEARNED = "LEARNED"
+    FAILED = "FAILED"
