@@ -69,12 +69,12 @@ export interface BudgetSummary {
   total: number;
   spent: number;
   remaining: number;
-  percentageUsed: number;
+  percentage_used: number;
 }
 
 export interface ProjectionSummary {
-  projectedTotal: number;
-  projectedSavings: number;
+  projected_total: number;
+  projected_savings: number;
   status: ProjectionStatus;
 }
 
@@ -110,19 +110,46 @@ export interface Alert {
   severity: AlertSeverity;
   title: string;
   message: string;
-  categoryId?: string;
-  agentSource: string;
-  createdAt: string;
-  seenAt?: string;
+  category_id?: string;
+  agent_source: string;
+  created_at: string;
+  seen_at?: string;
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
+// ── Dashboard & Charts ─────────────────────────────────────────────────────────
+
+export interface DashboardMeta {
+  days_in_month: number;
+  days_passed: number;
+  remaining_days: number;
+  pending_fixed_expenses: number;
+}
 
 export interface DashboardData {
-  availableToday: number;
+  available_today: number;
   budget: BudgetSummary;
   projection: ProjectionSummary;
   alerts: Alert[];
+  meta?: DashboardMeta;
+}
+
+export interface CategorySpendingItem {
+  slug: string;
+  name: string;
+  amount: number;
+}
+
+export interface TimelinePoint {
+  day: number;
+  label: string;
+  ideal: number;
+  actual: number | null;
+  daily_spent: number;
+}
+
+export interface DashboardChartsData {
+  categories: CategorySpendingItem[];
+  timeline: TimelinePoint[];
 }
 
 // ── Analysis & Agents ─────────────────────────────────────────────────────────

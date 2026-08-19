@@ -1,2 +1,2 @@
-// Charts Components placeholder export
-export {};
+export * from "./CategoryBreakdownChart";
+export * from "./SpendingPaceChart";

@@ -1,2 +1,1 @@
-// Alerts Components placeholder export
-export {};
+export * from "./AlertItem";
