@@ -4,6 +4,7 @@ Tests for Supabase Auth, Security and Database Service
 
 import pytest
 import jwt
+from unittest.mock import AsyncMock, patch, MagicMock
 from uuid import UUID, uuid4
 from fastapi import HTTPException
 from app.core.security import get_current_user_id, DEV_FALLBACK_USER_ID
@@ -41,18 +42,23 @@ async def test_get_current_user_id_with_jwt():
 
 @pytest.mark.asyncio
 async def test_database_service_categories_fallback():
-    categories = await DatabaseService.get_categories()
+    """Categories fallback is returned when client is None."""
+    with patch("app.services.db_service.get_db", return_value=None):
+        categories = await DatabaseService.get_categories()
     assert len(categories) >= 8
     assert any(c["slug"] == "food" for c in categories)
 
 
 @pytest.mark.asyncio
 async def test_database_service_log_agent_event():
-    success = await DatabaseService.log_agent_event(
-        user_id=uuid4(),
-        request_id=uuid4(),
-        agent_name="analyzer",
-        event_type="test_event",
-        duration_ms=15,
-    )
+    """log_agent_event returns True when client is None (logs locally)."""
+    with patch("app.services.db_service.get_service_db", return_value=None), \
+         patch("app.services.db_service.get_db", return_value=None):
+        success = await DatabaseService.log_agent_event(
+            user_id=uuid4(),
+            request_id=uuid4(),
+            agent_name="analyzer",
+            event_type="test_event",
+            duration_ms=15,
+        )
     assert success is True
