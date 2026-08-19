@@ -235,7 +235,7 @@ npm run build
 ## 13. Roadmap y Sprints
 
 - [x] **Sprint 0:** Inicialización del Repositorio, Frontend, Backend, Supabase Migrations & Documentación.
-- [ ] **Sprint 1:** Configuración de Supabase, Auth & Migraciones en la nube.
+- [x] **Sprint 1:** Configuración de Supabase, Auth & Migraciones en la nube.
 - [ ] **Sprint 2:** CRUD de Gastos, Presupuestos y Gastos Fijos.
 - [ ] **Sprint 3:** Dashboard y Métricas de Disponible Diario.
 - [ ] **Sprint 4:** Implementación del Orquestador y los 5 Agentes.
