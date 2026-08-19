@@ -100,9 +100,12 @@ export const AddExpense: React.FC = () => {
       {successId && (
         <div className="p-4 bg-emerald-950/80 border border-emerald-500/40 rounded-2xl flex items-start gap-3 text-emerald-200 text-xs animate-fade-in">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold">¡Gasto registrado exitosamente!</p>
-            <p className="text-emerald-400 mt-0.5 font-mono">ID: {successId.slice(0, 18)}…</p>
+          <div className="space-y-1">
+            <p className="font-bold text-emerald-300">¡Gasto registrado y procesado!</p>
+            <p className="text-[11px] text-slate-300">
+              Ciclo OODA ejecutado: <strong className="text-emerald-400">Captura ➔ Analizador ➔ Planificador ➔ Evaluador</strong>.
+            </p>
+            <p className="text-emerald-400 font-mono text-[10px]">ID: {successId.slice(0, 18)}…</p>
           </div>
         </div>
       )}

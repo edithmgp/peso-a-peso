@@ -152,6 +152,21 @@ export interface DashboardChartsData {
   timeline: TimelinePoint[];
 }
 
+// ── Observability & Agent Events ───────────────────────────────────────────────
+
+export interface AgentEvent {
+  id: string;
+  user_id: string;
+  request_id: string;
+  agent_name: "capture" | "analyzer" | "planner" | "evaluator" | "meta_agent" | string;
+  event_type: string;
+  input_data?: Record<string, any>;
+  output_data?: Record<string, any>;
+  status: "started" | "success" | "failed";
+  duration_ms?: number;
+  created_at: string;
+}
+
 // ── Analysis & Agents ─────────────────────────────────────────────────────────
 
 export interface FinancialAnalysis {

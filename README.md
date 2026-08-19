@@ -236,9 +236,9 @@ npm run build
 
 - [x] **Sprint 0:** Inicialización del Repositorio, Frontend, Backend, Supabase Migrations & Documentación.
 - [x] **Sprint 1:** Configuración de Supabase, Auth & Migraciones en la nube.
-- [ ] **Sprint 2:** CRUD de Gastos, Presupuestos y Gastos Fijos.
-- [ ] **Sprint 3:** Dashboard y Métricas de Disponible Diario.
-- [ ] **Sprint 4:** Implementación del Orquestador y los 5 Agentes.
+- [x] **Sprint 2:** CRUD de Gastos, Presupuestos y Gastos Fijos.
+- [x] **Sprint 3:** Dashboard y Métricas de Disponible Diario.
+- [x] **Sprint 4:** Implementación del Orquestador y los 5 Agentes.
 - [ ] **Sprint 5:** Meta-Agente y Ciclo de Feedback.
 - [ ] **Sprint 6:** Integración con Gemini 2.0 Flash y Gemini Vision (OCR).
 - [ ] **Sprint 7:** Seguridad, RLS, Validación y Tests de Integración.
