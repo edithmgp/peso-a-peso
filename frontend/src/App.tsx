@@ -4,6 +4,9 @@ import { Dashboard } from "./pages/Dashboard";
 import { Laboratory } from "./pages/Laboratory";
 import { AddExpense } from "./pages/AddExpense";
 import { Login } from "./pages/Login";
+import { ExpenseList } from "./pages/ExpenseList";
+import { BudgetSetup } from "./pages/BudgetSetup";
+import { FixedExpenses } from "./pages/FixedExpenses";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -13,6 +16,9 @@ export function App() {
       {activeTab === "dashboard" && <Dashboard />}
       {activeTab === "laboratory" && <Laboratory />}
       {activeTab === "add-expense" && <AddExpense />}
+      {activeTab === "expenses" && <ExpenseList />}
+      {activeTab === "budget" && <BudgetSetup />}
+      {activeTab === "fixed-expenses" && <FixedExpenses />}
       {activeTab === "login" && <Login />}
     </AppLayout>
   );

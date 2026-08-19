@@ -9,39 +9,60 @@ export type ProjectionStatus = "on_track" | "warning" | "over_budget";
 export type FeedbackType = "useful" | "not_useful";
 export type AgentTone = "neutral" | "friendly" | "direct";
 export type AlertFrequency = "low" | "normal" | "high";
+export type FixedExpensePriority = "low" | "normal" | "high";
+
+// ── Category ──────────────────────────────────────────────────────────────────
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+// ── Expense ───────────────────────────────────────────────────────────────────
 
 export interface Expense {
   id: string;
-  userId: string;
-  categoryId: string;
+  user_id: string;
+  category_id: string;
   amount: number;
   description?: string;
   merchant?: string;
-  expenseDate: string;
+  expense_date: string;
   source: ExpenseSource;
   confidence?: number;
   confirmed: boolean;
-  receiptPath?: string;
-  createdAt: string;
-  updatedAt: string;
+  receipt_path?: string;
+  created_at: string;
+  updated_at: string;
+  // Optional nested category (when backend joins)
+  categories?: Category;
 }
 
+/** Payload sent to POST /api/v1/expenses — uses snake_case to match FastAPI contract */
 export interface ExpenseCreatePayload {
   amount: number;
   description?: string;
   merchant?: string;
-  expenseDate: string;
-  categoryId: string;
+  expense_date: string;
+  category_id: string;
   source?: ExpenseSource;
 }
 
+// ── Budget ────────────────────────────────────────────────────────────────────
+
 export interface Budget {
   id: string;
-  userId: string;
+  user_id: string;
   month: string;
   amount: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BudgetCreatePayload {
+  month: string;
+  amount: number;
 }
 
 export interface BudgetSummary {
@@ -57,6 +78,32 @@ export interface ProjectionSummary {
   status: ProjectionStatus;
 }
 
+// ── Fixed Expenses ─────────────────────────────────────────────────────────────
+
+export interface FixedExpense {
+  id: string;
+  user_id: string;
+  category_id: string;
+  name: string;
+  expected_amount: number;
+  due_day: number;
+  priority: FixedExpensePriority;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  categories?: Category;
+}
+
+export interface FixedExpenseCreatePayload {
+  name: string;
+  category_id: string;
+  expected_amount: number;
+  due_day: number;
+  priority?: FixedExpensePriority;
+}
+
+// ── Alerts ────────────────────────────────────────────────────────────────────
+
 export interface Alert {
   id: string;
   type: string;
@@ -69,12 +116,16 @@ export interface Alert {
   seenAt?: string;
 }
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+
 export interface DashboardData {
   availableToday: number;
   budget: BudgetSummary;
   projection: ProjectionSummary;
   alerts: Alert[];
 }
+
+// ── Analysis & Agents ─────────────────────────────────────────────────────────
 
 export interface FinancialAnalysis {
   dailyAverage: number;
