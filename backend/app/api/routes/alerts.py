@@ -1,14 +1,16 @@
 """
 Alerts & Feedback Endpoints (/api/v1/alerts)
-Connected to AlertService for active alerts and feedback persistence.
+Connected to AlertService and MetaAgent continuous learning loop.
 """
 
 from typing import Any, Dict, List
-from uuid import UUID
+from uuid import UUID, uuid4
 from fastapi import APIRouter, status
 from app.api.dependencies import CurrentUser
 from app.schemas.alert import AlertResponse, AlertFeedbackCreate
+from app.schemas.agents import AgentContext
 from app.services.alert_service import AlertService
+from app.orchestrator.orchestrator import orchestrator
 
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
 
@@ -27,10 +29,24 @@ async def submit_alert_feedback(
 ) -> Dict[str, Any]:
     """
     Submits user feedback ('useful'/'not_useful') which persists to alert_feedback
-    and feeds the Continuous Learning Meta-Agent trace log.
+    and triggers the Continuous Learning Meta-Agent cycle to adapt category sensitivity.
     """
-    return await AlertService.record_feedback(
+    # 1. Record feedback in DB
+    result = await AlertService.record_feedback(
         user_id=user_id,
         alert_id=alert_id,
         feedback=payload.feedback,
     )
+
+    # 2. Trigger MetaAgent continuous learning cycle
+    context = AgentContext(
+        request_id=uuid4(),
+        user_id=user_id,
+        metadata={
+            "alert_id": str(alert_id),
+            "feedback": payload.feedback,
+        },
+    )
+    await orchestrator.run_feedback_cycle(context)
+
+    return result
