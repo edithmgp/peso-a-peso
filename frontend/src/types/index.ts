@@ -167,6 +167,31 @@ export interface AgentEvent {
   created_at: string;
 }
 
+// ── User Profile & Persistent Memory ──────────────────────────────────────────
+
+export interface UserProfile {
+  id: string;
+  full_name?: string;
+  currency: string;
+  monthly_income?: number;
+  payday?: number;
+  preferred_tone: AgentTone;
+  alert_frequency: AlertFrequency;
+  category_scores: Record<string, number>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserProfileUpdatePayload {
+  full_name?: string;
+  currency?: string;
+  monthly_income?: number;
+  payday?: number;
+  preferred_tone?: AgentTone;
+  alert_frequency?: AlertFrequency;
+  category_scores?: Record<string, number>;
+}
+
 // ── Analysis & Agents ─────────────────────────────────────────────────────────
 
 export interface FinancialAnalysis {

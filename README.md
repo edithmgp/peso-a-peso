@@ -239,7 +239,7 @@ npm run build
 - [x] **Sprint 2:** CRUD de Gastos, Presupuestos y Gastos Fijos.
 - [x] **Sprint 3:** Dashboard y Métricas de Disponible Diario.
 - [x] **Sprint 4:** Implementación del Orquestador y los 5 Agentes.
-- [ ] **Sprint 5:** Meta-Agente y Ciclo de Feedback.
+- [x] **Sprint 5:** Meta-Agente y Ciclo de Feedback.
 - [ ] **Sprint 6:** Integración con Gemini 2.0 Flash y Gemini Vision (OCR).
 - [ ] **Sprint 7:** Seguridad, RLS, Validación y Tests de Integración.
 - [ ] **Sprint 8:** Deployment en Producción (Vercel + Render).

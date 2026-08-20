@@ -17,6 +17,7 @@ const NAV_MAIN = [
 const NAV_CONFIG = [
   { id: "budget", label: "Presupuesto", icon: Wallet },
   { id: "fixed-expenses", label: "Gastos Fijos", icon: CalendarClock },
+  { id: "profile", label: "Perfil & Memoria", icon: Sparkles },
   { id: "login", label: "Acceso", icon: LogIn },
 ];
 

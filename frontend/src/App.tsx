@@ -7,6 +7,7 @@ import { Login } from "./pages/Login";
 import { ExpenseList } from "./pages/ExpenseList";
 import { BudgetSetup } from "./pages/BudgetSetup";
 import { FixedExpenses } from "./pages/FixedExpenses";
+import { ProfileSettings } from "./pages/ProfileSettings";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -19,6 +20,7 @@ export function App() {
       {activeTab === "expenses" && <ExpenseList />}
       {activeTab === "budget" && <BudgetSetup />}
       {activeTab === "fixed-expenses" && <FixedExpenses />}
+      {activeTab === "profile" && <ProfileSettings />}
       {activeTab === "login" && <Login />}
     </AppLayout>
   );
