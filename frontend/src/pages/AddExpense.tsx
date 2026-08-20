@@ -1,10 +1,28 @@
 import { useState, useEffect } from "react";
-import { PlusCircle, Camera, MessageSquare, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import {
+  PlusCircle,
+  Camera,
+  MessageSquare,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 import { categoriesService } from "../services/categories";
 import { expensesService } from "../services/expenses";
-import { Category } from "../types";
+import { captureService } from "../services/capture";
+import { Category, ReceiptCandidate, Expense } from "../types";
+import { CandidateReviewCard } from "../components/expenses/CandidateReviewCard";
 
 type Tab = "manual" | "text" | "ocr";
+
+const SAMPLE_PROMPTS = [
+  "Gasté $15.000 en Coto comprando carne y verduras",
+  "Pagué $32.500 de luz Edenor",
+  "Viaje en Uber por $8.400",
+  "Cena en La Cabrera por $45.000 ayer",
+];
 
 export const AddExpense: React.FC = () => {
   const [tab, setTab] = useState<Tab>("manual");
@@ -13,14 +31,29 @@ export const AddExpense: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  // Form state
+  // Manual Form state
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [merchant, setMerchant] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Submit state
+  // AI Text state
+  const [aiText, setAiText] = useState("");
+  const [aiProcessing, setAiProcessing] = useState(false);
+
+  // OCR state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [ocrProcessing, setOcrProcessing] = useState(false);
+
+  // Extracted Candidate (Human-in-the-loop)
+  const [activeCandidate, setActiveCandidate] = useState<{
+    candidate: ReceiptCandidate;
+    source: "text" | "ocr";
+  } | null>(null);
+
+  // Submit / Notification state
   const [submitting, setSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +70,7 @@ export const AddExpense: React.FC = () => {
       .finally(() => setCategoriesLoading(false));
   }, []);
 
-  const resetForm = () => {
+  const resetManualForm = () => {
     setAmount("");
     setDescription("");
     setMerchant("");
@@ -46,7 +79,7 @@ export const AddExpense: React.FC = () => {
     setError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !categoryId) return;
 
@@ -64,9 +97,8 @@ export const AddExpense: React.FC = () => {
         source: "manual",
       });
       setSuccessId(expense.id);
-      resetForm();
-      // Clear success message after 4 seconds
-      setTimeout(() => setSuccessId(null), 4000);
+      resetManualForm();
+      setTimeout(() => setSuccessId(null), 5000);
     } catch (err: any) {
       setError(err?.message || "No se pudo registrar el gasto. Verificá la conexión.");
     } finally {
@@ -74,11 +106,61 @@ export const AddExpense: React.FC = () => {
     }
   };
 
+  const handleProcessText = async () => {
+    if (!aiText.trim()) return;
+    setAiProcessing(true);
+    setError(null);
+    try {
+      const candidate = await captureService.captureFromText(aiText);
+      setActiveCandidate({ candidate, source: "text" });
+    } catch (err: any) {
+      setError(err?.message || "Error al procesar el texto con Gemini.");
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setError(null);
+    }
+  };
+
+  const handleProcessReceipt = async () => {
+    if (!selectedFile) return;
+    setOcrProcessing(true);
+    setError(null);
+    try {
+      const candidate = await captureService.captureFromReceipt(selectedFile);
+      setActiveCandidate({ candidate, source: "ocr" });
+    } catch (err: any) {
+      setError(err?.message || "Error al procesar la imagen del ticket con OCR.");
+    } finally {
+      setOcrProcessing(false);
+    }
+  };
+
+  const handleCandidateSuccess = (created: Expense) => {
+    setActiveCandidate(null);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setAiText("");
+    setSuccessId(created.id);
+    setTimeout(() => setSuccessId(null), 5000);
+  };
+
   const tabBtn = (t: Tab, icon: React.ReactNode, label: string) => (
     <button
       id={`tab-${t}`}
       type="button"
-      onClick={() => setTab(t)}
+      onClick={() => {
+        setTab(t);
+        setActiveCandidate(null);
+        setError(null);
+      }}
       className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all ${
         tab === t ? "bg-emerald-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
       }`}
@@ -118,10 +200,24 @@ export const AddExpense: React.FC = () => {
         </div>
       )}
 
-      {/* ── Manual Form ── */}
-      {tab === "manual" && (
-        <form id="form-add-expense-manual" onSubmit={handleSubmit} className="glass-panel rounded-3xl p-6 border border-slate-800 space-y-4">
-          {/* Amount */}
+      {/* Human-in-the-loop Review Card (Shown when candidate is extracted) */}
+      {activeCandidate && (
+        <CandidateReviewCard
+          candidate={activeCandidate.candidate}
+          categories={categories}
+          source={activeCandidate.source}
+          onSuccess={handleCandidateSuccess}
+          onDiscard={() => setActiveCandidate(null)}
+        />
+      )}
+
+      {/* ── Mode 1: Manual Form ── */}
+      {tab === "manual" && !activeCandidate && (
+        <form
+          id="form-add-expense-manual"
+          onSubmit={handleManualSubmit}
+          className="glass-panel rounded-3xl p-6 border border-slate-800 space-y-4"
+        >
           <div>
             <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
               Monto ($) <span className="text-red-400">*</span>
@@ -139,9 +235,10 @@ export const AddExpense: React.FC = () => {
             />
           </div>
 
-          {/* Merchant */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Comercio</label>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Comercio
+            </label>
             <input
               id="input-merchant"
               type="text"
@@ -152,7 +249,6 @@ export const AddExpense: React.FC = () => {
             />
           </div>
 
-          {/* Category */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
               Categoría <span className="text-red-400">*</span>
@@ -178,9 +274,10 @@ export const AddExpense: React.FC = () => {
             )}
           </div>
 
-          {/* Date */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Fecha del gasto</label>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Fecha del gasto
+            </label>
             <input
               id="input-date"
               type="date"
@@ -190,12 +287,13 @@ export const AddExpense: React.FC = () => {
             />
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Descripción</label>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+              Descripción
+            </label>
             <textarea
               id="input-description"
-              placeholder="Ej: Compra mensual de insumos"
+              placeholder="Ej: Compra semanal de verduras"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -220,52 +318,130 @@ export const AddExpense: React.FC = () => {
         </form>
       )}
 
-      {/* ── Natural Language ── */}
-      {tab === "text" && (
+      {/* ── Mode 2: Natural Language AI ── */}
+      {tab === "text" && !activeCandidate && (
         <div className="glass-panel rounded-3xl p-6 border border-slate-800 space-y-4">
-          <div className="p-3 bg-amber-950/40 border border-amber-500/20 rounded-xl text-amber-300 text-xs">
-            🚀 <strong>Sprint 6</strong> — La captura por lenguaje natural con Gemini se implementa en el Sprint de IA.
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-200 mb-1">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Ingesta por Lenguaje Natural (Gemini 2.0)</span>
+            </div>
+            <p className="text-xs text-slate-400">
+              Escribí libremente el gasto y el <strong>Agente de Captura</strong> extraerá monto, comercio y categoría.
+            </p>
           </div>
-          <p className="text-xs text-slate-400">
-            Escribí libremente el gasto y el <strong>Agente de Captura + Gemini</strong> extraerá los campos.
-          </p>
+
+          {/* Quick example chips */}
+          <div className="space-y-1.5">
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Ejemplos rápidos:</span>
+            <div className="flex flex-wrap gap-1.5">
+              {SAMPLE_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => setAiText(prompt)}
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-all text-left"
+                >
+                  "{prompt}"
+                </button>
+              ))}
+            </div>
+          </div>
+
           <textarea
             id="input-text-capture"
             placeholder='Ej: "Gasté $15.000 en Coto comprando carne y verduras"'
             rows={4}
-            className="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-4 text-slate-100 text-sm focus:outline-none focus:border-emerald-500 resize-none"
+            value={aiText}
+            onChange={(e) => setAiText(e.target.value)}
+            className="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-4 text-slate-100 text-sm focus:outline-none focus:border-emerald-500 resize-none transition-colors"
           />
+
           <button
-            disabled
-            className="w-full py-3 bg-slate-700 cursor-not-allowed text-slate-400 font-bold rounded-xl text-sm"
+            id="btn-process-text"
+            type="button"
+            onClick={handleProcessText}
+            disabled={aiProcessing || !aiText.trim()}
+            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition-all text-sm flex items-center justify-center gap-2"
           >
-            Procesar con IA (próximamente)
+            {aiProcessing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Extrayendo con Gemini 2.0…
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" /> Procesar con IA Gemini
+              </>
+            )}
           </button>
         </div>
       )}
 
-      {/* ── OCR ── */}
-      {tab === "ocr" && (
-        <div className="glass-panel rounded-3xl p-8 border border-slate-800 text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
-            <Camera className="w-8 h-8" />
+      {/* ── Mode 3: Ticket OCR Vision ── */}
+      {tab === "ocr" && !activeCandidate && (
+        <div className="glass-panel rounded-3xl p-6 border border-slate-800 space-y-5">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+              <Camera className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-100">Subir Fotografía de Ticket o Factura</h3>
+              <p className="text-xs text-slate-400 mt-0.5 max-w-sm mx-auto">
+                Gemini Vision extraerá los datos del comprobante para tu confirmación interactiva.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-100">Subir Fotografía de Ticket</h3>
-            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-              Gemini Vision extraerá los datos y te solicitará confirmación humana antes de persistir.
-            </p>
+
+          {/* File input / Dropzone */}
+          <div className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-2xl p-6 text-center transition-all bg-slate-950/60">
+            <input
+              id="input-receipt-file"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <label htmlFor="input-receipt-file" className="cursor-pointer block space-y-2">
+              {previewUrl ? (
+                <div className="space-y-3">
+                  <img
+                    src={previewUrl}
+                    alt="Ticket preview"
+                    className="max-h-48 mx-auto rounded-xl border border-slate-700 object-contain shadow-lg"
+                  />
+                  <p className="text-xs text-emerald-400 font-medium">
+                    {selectedFile?.name} (Click para cambiar imagen)
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 py-4">
+                  <Upload className="w-8 h-8 text-slate-500 mx-auto" />
+                  <p className="text-xs text-slate-300 font-semibold">
+                    Hacé click para seleccionar o arrastrá una foto de tu ticket
+                  </p>
+                  <p className="text-[10px] text-slate-500">Formatos soportados: JPG, PNG, WEBP</p>
+                </div>
+              )}
+            </label>
           </div>
-          <div className="p-3 bg-amber-950/40 border border-amber-500/20 rounded-xl text-amber-300 text-xs">
-            🚀 <strong>Sprint 6</strong> — OCR con Gemini Vision se implementa en el Sprint de IA.
-          </div>
-          <input
-            id="input-receipt-file"
-            type="file"
-            accept="image/*"
-            disabled
-            className="text-xs text-slate-500 mx-auto cursor-not-allowed"
-          />
+
+          <button
+            id="btn-process-receipt"
+            type="button"
+            onClick={handleProcessReceipt}
+            disabled={ocrProcessing || !selectedFile}
+            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition-all text-sm flex items-center justify-center gap-2"
+          >
+            {ocrProcessing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Analizando ticket con Gemini Vision…
+              </>
+            ) : (
+              <>
+                <Camera className="w-4 h-4" /> Analizar Ticket con Gemini Vision
+              </>
+            )}
+          </button>
         </div>
       )}
     </div>
