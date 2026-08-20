@@ -29,7 +29,11 @@ export const captureService = {
       Authorization: `Bearer ${token}`,
     };
 
-    const res = await fetch("http://localhost:8000/api/v1/capture/receipt", {
+    const apiBase =
+      import.meta.env.VITE_API_URL?.replace(/\/$/, "") ??
+      "http://localhost:8000/api/v1";
+
+    const res = await fetch(`${apiBase}/capture/receipt`, {
       method: "POST",
       headers,
       body: formData,
