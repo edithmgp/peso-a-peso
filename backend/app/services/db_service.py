@@ -16,7 +16,7 @@ class DatabaseService:
     @staticmethod
     async def get_categories() -> List[Dict[str, Any]]:
         """Fetches all predefined categories."""
-        client = get_db()
+        client = get_service_db() or get_db()
         if client is None:
             # Fallback mock data when Supabase is not connected
             return [

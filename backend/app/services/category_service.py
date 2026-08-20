@@ -5,7 +5,7 @@ Categories are global (no user_id). All authenticated users can read them.
 
 import logging
 from typing import Any, Dict, List
-from app.core.database import get_db
+from app.core.database import get_service_db, get_db
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class CategoryService:
     @staticmethod
     async def get_all() -> List[Dict[str, Any]]:
         """Fetches all predefined categories from Supabase."""
-        client = get_db()
+        client = get_service_db() or get_db()
         if client is None:
             logger.info("Supabase not configured — returning fallback categories.")
             return _FALLBACK_CATEGORIES

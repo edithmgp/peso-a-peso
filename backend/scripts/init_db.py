@@ -14,7 +14,7 @@ from app.core.database import get_db, get_service_db
 
 def test_supabase_connection():
     print("=" * 60)
-    print("🪙 Peso a Peso — Verificación de Conexión a Supabase")
+    print("[*] Peso a Peso - Verificacion de Conexion a Supabase")
     print("=" * 60)
     print(f"Supabase URL: {settings.SUPABASE_URL}")
     print(f"Ambiente: {settings.ENVIRONMENT}")
@@ -28,9 +28,9 @@ def test_supabase_connection():
 
     try:
         response = client.table("categories").select("count", count="exact").execute()
-        print(f"✅ Conexión exitosa. Categorías encontradas en DB: {response.count}")
+        print(f"[OK] Conexion exitosa. Categorias encontradas en DB: {response.count}")
     except Exception as e:
-        print(f"❌ Error al consultar la base de datos: {e}")
+        print(f"[ERROR] Error al consultar la base de datos: {e}")
 
 
 if __name__ == "__main__":
