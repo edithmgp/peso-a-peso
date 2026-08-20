@@ -240,7 +240,7 @@ npm run build
 - [x] **Sprint 3:** Dashboard y Métricas de Disponible Diario.
 - [x] **Sprint 4:** Implementación del Orquestador y los 5 Agentes.
 - [x] **Sprint 5:** Meta-Agente y Ciclo de Feedback.
-- [ ] **Sprint 6:** Integración con Gemini 2.0 Flash y Gemini Vision (OCR).
+- [x] **Sprint 6:** Integración con Gemini 2.0 Flash y Gemini Vision (OCR).
 - [ ] **Sprint 7:** Seguridad, RLS, Validación y Tests de Integración.
 - [ ] **Sprint 8:** Deployment en Producción (Vercel + Render).
 - [ ] **Sprint 9:** Entrega Final, Capturas, Video y Reporte de Arquitectura.
