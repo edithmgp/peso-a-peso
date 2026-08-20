@@ -232,15 +232,25 @@ npm run build
 
 ---
 
-## 13. Roadmap y Sprints
+## 13. Roadmap de Sprints (100% Completado)
 
 - [x] **Sprint 0:** Inicialización del Repositorio, Frontend, Backend, Supabase Migrations & Documentación.
 - [x] **Sprint 1:** Configuración de Supabase, Auth & Migraciones en la nube.
 - [x] **Sprint 2:** CRUD de Gastos, Presupuestos y Gastos Fijos.
 - [x] **Sprint 3:** Dashboard y Métricas de Disponible Diario.
-- [x] **Sprint 4:** Implementación del Orquestador y los 5 Agentes.
-- [x] **Sprint 5:** Meta-Agente y Ciclo de Feedback.
-- [x] **Sprint 6:** Integración con Gemini 2.0 Flash y Gemini Vision (OCR).
-- [ ] **Sprint 7:** Seguridad, RLS, Validación y Tests de Integración.
-- [ ] **Sprint 8:** Deployment en Producción (Vercel + Render).
-- [ ] **Sprint 9:** Entrega Final, Capturas, Video y Reporte de Arquitectura.
+- [x] **Sprint 4:** Implementación del Orquestador y los 5 Agentes (Ciclo OODA).
+- [x] **Sprint 5:** Meta-Agente, Aprendizaje Continuo y Memoria de Sensibilidad.
+- [x] **Sprint 6:** Ingesta Inteligente con Gemini 2.0 Flash y Gemini Vision (OCR).
+- [x] **Sprint 7:** Seguridad, RLS, Validación, Limpieza y 80 Tests de Integración.
+- [x] **Sprint 8:** Despliegue en Producción (Vercel + Render + Supabase).
+- [x] **Sprint 9:** Entrega Final, Documentación Consolidada y Reporte Técnico de Arquitectura.
+
+---
+
+## 14. Documentación y Enlaces Clave
+
+- 📊 **[Reporte Técnico de Arquitectura](docs/ARCHITECTURE_REPORT.md)**: Especificación detallada del Ciclo OODA, modelado matemático de Disponible Diario, arquitectura de los 5 agentes, esquemas de BD y métricas de calidad.
+- 🚀 **[Guía de Despliegue en Producción](docs/DEPLOYMENT.md)**: Instrucciones paso a paso para desplegar Backend en Render, Frontend en Vercel y configurar Supabase Auth.
+- 📑 **[Contratos y Especificación API](docs/API_CONTRACTS.md)**: Esquemas OpenAPI, modelos Pydantic y endpoints de la API v1.
+- 🗄️ **[Esquema y Migraciones de Base de Datos](supabase/README.md)**: DDL de las 10 tablas, triggers y políticas RLS.
+
